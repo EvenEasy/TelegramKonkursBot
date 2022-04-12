@@ -2,8 +2,11 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeybo
 
 Participal = InlineKeyboardMarkup().add(InlineKeyboardButton(text="Проверить Подписку", callback_data="CheckSub"))
 
-MainPanel = ReplyKeyboardMarkup(resize_keyboard=True)
-MainPanel.add(KeyboardButton("Главная"))
-#MainPanel.add(KeyboardButton("Играть на TON"))
-#MainPanel.add(KeyboardButton("Binance"))
-#MainPanel.add(KeyboardButton("Рейтинг"))
+MainPanel = InlineKeyboardMarkup().add(
+    InlineKeyboardButton(text="Мои балы", callback_data="CheckMyScars"),
+    InlineKeyboardButton(text="Изменить Wallet code", callback_data="ChangeWalletCode"),
+    InlineKeyboardButton(text="Моя реферальная ссылка ", callback_data="MyReffLink")
+)
+MainPanel.add(InlineKeyboardButton(text="Проверить Подписку", callback_data="CheckSub"))
+
+GoToMenu = InlineKeyboardMarkup().add(InlineKeyboardButton(text="Главное меню", callback_data="GoToMainMenu"))
