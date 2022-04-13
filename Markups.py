@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
 Participal = InlineKeyboardMarkup().add(InlineKeyboardButton(text="Проверить Подписку", callback_data="CheckSub"))
-def MainPanel(isOwner = False, isMember = False, isSubs = False):
+def MainPanel(isOwner, isMember = False, isSubs = False):
     MainPanel = InlineKeyboardMarkup()
     if isMember:
         MainPanel.add(
@@ -9,7 +9,7 @@ def MainPanel(isOwner = False, isMember = False, isSubs = False):
             InlineKeyboardButton(text="Изменить Wallet code", callback_data="ChangeWalletCode")
         )
     MainPanel.add(InlineKeyboardButton(text="Моя реферальная ссылка", callback_data="MyReffLink"))
-    if not isSubs:
+    if isSubs:
         MainPanel.add(InlineKeyboardButton(text="Проверить Подписку", callback_data="CheckSub"))
     if isOwner:
         MainPanel.add(InlineKeyboardButton(text="Список", callback_data="list"))
@@ -17,7 +17,7 @@ def MainPanel(isOwner = False, isMember = False, isSubs = False):
 
 GoToMenu = InlineKeyboardMarkup().add(InlineKeyboardButton(text="Главное меню", callback_data="GoToMainMenu"))
 
-def MainBttnsPanel(isOwner = False):
+def MainBttnsPanel(isOwner):
     MainBttnsPanel = ReplyKeyboardMarkup(resize_keyboard=True)
     MainBttnsPanel.add(KeyboardButton("Мои балы"))
     MainBttnsPanel.add(KeyboardButton("Изменить Wallet code"))
