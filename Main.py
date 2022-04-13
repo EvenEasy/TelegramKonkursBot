@@ -1,4 +1,4 @@
-import config, logging, Markups
+import config, logging, Markups, os
 from aiogram import Dispatcher, Bot, types, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -30,11 +30,14 @@ async def CheckSubsMembers():
                     await bot.send_message(user.user.id, f"Учасник {member.user.full_name} покинул чат\nу вас -1 очко")
 
 
+
+
 #----------------------------------------------------------FUNCTION----------------------------------------------------------#
 
 @dp.message_handler(commands=['start'])
 async def cmd_start(msg : types.Message):
     await CheckSubsMembers()
+    member = await bot.get_chat_member(ChannelID, msg.from_user.id)
     balance = 0
     NumInvited = 0
     if db.sql(f"SELECT userID FROM Subs WHERE userID = {msg.from_user.id}") != []:
@@ -51,14 +54,15 @@ async def cmd_start(msg : types.Message):
             users.append(str(msg.from_user.id))
             num = db.sql(f"SELECT Scars FROM Subs WHERE userID={userID}")[0][0]
             if num + 1 == 1:
-                await bot.send_message(userID, "Поздравляю, ви участвуете в конкурсе\nпо вашей силке перешел 1 человек", reply_markup=Markups.MainBttnsPanel)
+                await bot.send_message(userID, "Поздравляю, ви участвуете в конкурсе\nпо вашей силке перешел 1 человек", reply_markup=Markups.MainBttnsPanel())
             db.sql(f"UPDATE Subs SET Scars = {num + 1}, UserUsedRefName = '{'|'.join(users)}' WHERE userID={userID}")
     except IndexError:
         pass
     if db.sql(f"SELECT UserID FROM Subs WHERE UserID = {msg.from_user.id}") == []:
         await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.Participal)
     else:
-        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel)
+        Scars = db.sql(f"SELECT Scars FROM Subs WHERE userID={msg.from_user.id}")[0][0]
+        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(member.is_chat_owner, Scars >= 1, member.is_chat_member))
 
 #------------------------------------------------------------------------#
 
@@ -83,9 +87,11 @@ async def WalletCode(msg : types.Message, state : FSMContext):
     if msg.text == "Главное меню" or msg.text == '/start':
         balance = 0
         NumInvited = 0
+        Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
+        user = await bot.get_chat_member(ChannelID, msg.from_user.id)
         if db.sql(f"SELECT userID FROM Subs WHERE userID = {msg.from_user.id}") != []:
             NumInvited, balance = db.sql(f"SELECT Scars, Balance FROM Subs WHERE userID = {msg.from_user.id} LIMIT 1")[0]
-        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel)
+        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(False, Scars >= 1, user.is_chat_member))
         return
     db.sql(f"UPDATE Subs SET WalletCode = '{msg.text}' WHERE UserID = {msg.from_user.id}")
     await msg.answer(db.ReffLink.format(personalLink), reply_markup=Markups.GoToMenu)
@@ -103,7 +109,7 @@ async def Functions(msg : types.Message):
         await msg.answer(f"Ваша реферальная ссылка :\n{refLink}")
 #----------------------------------------------------------CALL-BACK-BTTN-CLICK----------------------------------------------------------#
 
-@dp.callback_query_handler(text=["CheckSub", "CheckMyScars", "ChangeWalletCode", "MyReffLink", "GoToMainMenu"])
+@dp.callback_query_handler(text=["CheckSub", "CheckMyScars", "ChangeWalletCode", "MyReffLink", "GoToMainMenu", "list"])
 async def callback(call : types.CallbackQuery):
     await CheckSubsMembers()
     if call.data == "CheckSub":
@@ -118,7 +124,7 @@ async def callback(call : types.CallbackQuery):
                 return
             url = f"https://t.me/EvenEasyBot?start={user.user.id}"
             if db.sql(f"SELECT IsAParticipant FROM Subs WHERE UserID = {user.user.id}") == []:
-                db.sql(f"INSERT INTO Subs VALUES ({user.user.id}, '{url}' ,0, 0, '{user.user.full_name}', 't', '', '')")
+                db.sql(f"INSERT INTO Subs VALUES ({user.user.id}, '{url}' ,0, 0, '{str(user.user.mention)}', 't', '', '')")
             elif db.sql(f"SELECT IsAParticipant FROM Subs WHERE UserID = {user.user.id}")[0][0] == 'f':
                 db.sql(f"UPDATE Subs SET IsAParticipant = 't' WHERE USERID = {user.user.id}")
             await bot.send_photo(call.message.chat.id, open('photo.jpg', 'rb'), caption=db.ValidText)
@@ -127,7 +133,9 @@ async def callback(call : types.CallbackQuery):
             print(f"ERROR - {E}")
 
     elif call.data == "GoToMainMenu":
-        await call.message.answer(db.MainText.format(call.from_user.first_name), reply_markup=Markups.MainPanel)
+        user = await bot.get_chat_member(ChannelID, call.from_user.id)
+        Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {call.from_user.id}")[0][0]
+        await call.message.answer(db.MainText.format(call.from_user.first_name), reply_markup=Markups.MainPanel(user.is_chat_owner, Scars >= 1, user.is_chat_member))
 
     elif call.data == "ChangeWalletCode":
         await call.message.answer("Введите новий wallet code")
@@ -136,6 +144,13 @@ async def callback(call : types.CallbackQuery):
     elif call.data == "MyReffLink":
         refLink = f"https://t.me/EvenEasyBot?start={call.from_user.id}"
         await call.message.answer(f"Ваша реферальная ссылка :\n{refLink}")
+    elif call.data == "list":
+        with open("MembersList.txt", 'a', encoding='utf8') as file:
+            file.truncate(0)
+            for name, WalletCode, Scars in db.sql("SELECT UserName, WalletCode, Scars FROM Subs ORDER BY Scars DESC"):
+                file.write(f"[ {name} ] , {WalletCode} - {Scars}\n")
+        with open(file.name, 'rb') as f:
+            await bot.send_document(call.from_user.id, f)
     else:
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {call.from_user.id}")[0][0]
         await call.message.answer(f"Кол-во ваших баллов : {Scars}")
