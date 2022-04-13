@@ -8,7 +8,7 @@ from BaseData import BaseData
 logging.basicConfig(level=logging.INFO)
 bot = Bot(config.TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
-ChannelID = "@testchnbot"
+ChannelID = "@Qredo_Russian"
 
 db = BaseData("basedata.db")
 
@@ -40,7 +40,7 @@ async def cmd_start(msg : types.Message):
     NumInvited = 0
     if db.sql(f"SELECT userID FROM Subs WHERE userID = {msg.from_user.id}") != []:
         NumInvited, balance = db.sql(f"SELECT Scars, Balance FROM Subs WHERE userID = {msg.from_user.id} LIMIT 1")[0]
-    personalLink = f"https://t.me/EvenEasyBot?start={msg.from_user.id}"
+    personalLink = f"https://t.me/Qredo_Russia_AirDrop_bot?start={msg.from_user.id}"
     try:
         users = []
         userID = msg.text.split(' ')[1]
@@ -70,7 +70,7 @@ async def cmd_start(msg : types.Message):
 @dp.message_handler(state=Form.walletCode)
 async def WalletCode(msg : types.Message, state : FSMContext):
     await state.finish()
-    personalLink = f"https://t.me/EvenEasyBot?start={msg.from_user.id}"
+    personalLink = f"https://t.me/Qredo_Russia_AirDrop_bot?start={msg.from_user.id}"
     user = await bot.get_chat_member(ChannelID, msg.from_user.id)
     if msg.text == "Главное меню" or msg.text == '/start':
         balance = 0
@@ -93,7 +93,7 @@ async def Functions(msg : types.Message):
         await msg.answer("Введите новий wallet code")
         await Form.walletCode.set()
     elif msg.text == "Моя реферальная ссылка":
-        refLink = f"https://t.me/EvenEasyBot?start={msg.from_user.id}"
+        refLink = f"https://t.me/Qredo_Russia_AirDrop_bot?start={msg.from_user.id}"
         await msg.answer(f"Ваша реферальная ссылка :\n{refLink}\n*для участия в конкурсе, пригласите минимум 1 человека")
 #----------------------------------------------------------CALL-BACK-BTTN-CLICK----------------------------------------------------------#
 
@@ -137,7 +137,7 @@ async def callback(call : types.CallbackQuery):
         await Form.walletCode.set()
 
     elif call.data == "MyReffLink":
-        refLink = f"https://t.me/EvenEasyBot?start={call.from_user.id}"
+        refLink = f"https://t.me/Qredo_Russia_AirDrop_bot?start={call.from_user.id}"
         await call.message.answer(f"Ваша реферальная ссылка :\n{refLink}\n*для участия в конкурсе, пригласите минимум 1 человека")
     elif call.data == "list":
         with open("MembersList.txt", 'a', encoding='utf8') as file:
