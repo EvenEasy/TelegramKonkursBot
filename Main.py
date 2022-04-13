@@ -26,7 +26,7 @@ async def CheckSubsMembers():
                     arr.remove(id)
                     db.sql(f"UPDATE Subs SET Scars = {scars - 1}, UserUsedRefName = '{'|'.join(arr)}' WHERE userID={i[0]}")
                     user = await bot.get_chat_member(ChannelID, i[0])
-                    await bot.send_message(member.user.id, "Ви уже не участвуете в конкурсе")
+                    await bot.send_message(member.user.id, "Вы уже не участвуете в конкурсе, Вы покинули группу [Qredo Russian](https://t.me/Qredo_Russian)", reply_markup=Markups.Participal)
                     await bot.send_message(user.user.id, f"Участник {member.user.mention} покинул чат, у Вас минус 1 балл 😔")
 
 
@@ -66,20 +66,6 @@ async def cmd_start(msg : types.Message):
         await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(member.is_chat_creator(), Scars >= 1, member.is_chat_member), parse_mode="Markdown")
 
 #------------------------------------------------------------------------#
-
-@dp.message_handler(commands=['send'])
-async def sender(message : types.Message):
-    try:
-        user = await bot.get_chat_member(ChannelID, message.from_user.id)
-    except:
-        await message.answer("Вас нет в канале")
-    if user.is_chat_admin():
-        await bot.send_message(ChannelID,' '.join((message.text.split(' '))[1::]))
-    else:
-        await message.answer("У вас нет права писать сообщение в канал")
-
-#------------------------------------------------------------------------#
-
 
 @dp.message_handler(state=Form.walletCode)
 async def WalletCode(msg : types.Message, state : FSMContext):
