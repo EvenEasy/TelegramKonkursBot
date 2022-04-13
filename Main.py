@@ -15,10 +15,26 @@ db = BaseData("basedata.db")
 class Form(StatesGroup):
     walletCode = State()
 
+async def CheckSubsMembers():
+    for i in db.sql("SELECT UserID FROM Subs"):
+        arr = (db.sql(f"SELECT UserUsedRefName FROM Subs WHERE UserID = {i[0]}")[0][0]).split('|') if db.sql(f"SELECT UserUsedRefName FROM Subs WHERE UserID = {i[0]}")[0][0] != '' else [] 
+        if arr != []:
+            for id in arr[1::]:
+                member = await bot.get_chat_member(ChannelID, id)
+                if not member.is_chat_member():
+                    scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i[0]}")[0][0]
+                    arr.remove(id)
+                    db.sql(f"UPDATE Subs SET Scars = {scars - 1}, UserUsedRefName = '{'|'.join(arr)}' WHERE userID={i[0]}")
+                    user = await bot.get_chat_member(ChannelID, i[0])
+                    await bot.send_message(member.user.id, "Ви уже не участвуете в конкурсе")
+                    await bot.send_message(user.user.id, f"Учасник {member.user.full_name} покинул чат\nу вас -1 очко")
+
+
 #----------------------------------------------------------FUNCTION----------------------------------------------------------#
 
 @dp.message_handler(commands=['start'])
 async def cmd_start(msg : types.Message):
+    await CheckSubsMembers()
     balance = 0
     NumInvited = 0
     if db.sql(f"SELECT userID FROM Subs WHERE userID = {msg.from_user.id}") != []:
@@ -34,6 +50,8 @@ async def cmd_start(msg : types.Message):
         if str(msg.from_user.id) not in users and str(msg.from_user.id) != userID:
             users.append(str(msg.from_user.id))
             num = db.sql(f"SELECT Scars FROM Subs WHERE userID={userID}")[0][0]
+            if num + 1 == 1:
+                await bot.send_message(userID, "Поздравляю, ви участвуете в конкурсе\nпо вашей силке перешел 1 человек", reply_markup=Markups.MainBttnsPanel)
             db.sql(f"UPDATE Subs SET Scars = {num + 1}, UserUsedRefName = '{'|'.join(users)}' WHERE userID={userID}")
     except IndexError:
         pass
@@ -72,18 +90,27 @@ async def WalletCode(msg : types.Message, state : FSMContext):
     db.sql(f"UPDATE Subs SET WalletCode = '{msg.text}' WHERE UserID = {msg.from_user.id}")
     await msg.answer(db.ReffLink.format(personalLink), reply_markup=Markups.GoToMenu)
 
+@dp.message_handler()
+async def Functions(msg : types.Message):
+    if msg.text == "Мои балы":
+        Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
+        await msg.answer(f"Кол-во ваших баллов : {Scars}")
+    elif msg.text == "Изменить Wallet code":
+        await msg.answer("Введите новий wallet code")
+        await Form.walletCode.set()
+    elif msg.text == "Моя реферальная ссылка":
+        refLink = f"https://t.me/EvenEasyBot?start={msg.from_user.id}"
+        await msg.answer(f"Ваша реферальная ссылка :\n{refLink}")
 #----------------------------------------------------------CALL-BACK-BTTN-CLICK----------------------------------------------------------#
 
 @dp.callback_query_handler(text=["CheckSub", "CheckMyScars", "ChangeWalletCode", "MyReffLink", "GoToMainMenu"])
 async def callback(call : types.CallbackQuery):
-
+    await CheckSubsMembers()
     if call.data == "CheckSub":
-        try:
-            user = await bot.get_chat_member(ChannelID, call.from_user.id)
-
-        except Exception as E:
+        user = await bot.get_chat_member(ChannelID, call.from_user.id)
+        if not user.is_chat_member():
             await call.message.answer("❌ Вы не Подписаны.")
-            print(f"ERROR - {E}")
+            return
         
         try:
             if db.sql(f"SELECT IsAParticipant FROM Subs WHERE UserID = {user.user.id}") != []:
@@ -107,9 +134,8 @@ async def callback(call : types.CallbackQuery):
         await Form.walletCode.set()
 
     elif call.data == "MyReffLink":
-        refLink = db.sql(f'SELECT ReferalLink FROM Subs WHERE UserID = {call.from_user.id}')[0][0]
-        await call.message.answer(f"Ваша реферальная ссылка : \n{refLink}")
-
+        refLink = f"https://t.me/EvenEasyBot?start={call.from_user.id}"
+        await call.message.answer(f"Ваша реферальная ссылка :\n{refLink}")
     else:
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {call.from_user.id}")[0][0]
         await call.message.answer(f"Кол-во ваших баллов : {Scars}")
