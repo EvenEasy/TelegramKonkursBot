@@ -112,6 +112,10 @@ async def Functions(msg : types.Message):
 @dp.callback_query_handler(text=["CheckSub", "CheckMyScars", "ChangeWalletCode", "MyReffLink", "GoToMainMenu", "list"])
 async def callback(call : types.CallbackQuery):
     await CheckSubsMembers()
+    try:
+        await call.answer()
+    except:
+        pass
     if call.data == "CheckSub":
         user = await bot.get_chat_member(ChannelID, call.from_user.id)
         if not user.is_chat_member():
