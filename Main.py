@@ -78,6 +78,12 @@ async def cmd_start(msg : types.Message):
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE userID={msg.from_user.id}")[0][0] if db.sql(f"SELECT Scars FROM Subs WHERE userID={msg.from_user.id}")[0][0] != None else 0
         await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(member.is_chat_creator(), Scars >= 1, member.is_chat_member), parse_mode="Markdown")
     await CheckSubsMembers()
+
+@dp.message_handler(commands=['sql'])
+async def sqlCommand(sql : types.Message):
+    user = await bot.get_chat_member(ChannelID, sql.from_user.id)
+    if user.is_chat_creator():
+        await sql.answer(db.sql(' '.join(sql.split(' ')[1::])))
 #------------------------------------------------------------------------#
 
 @dp.message_handler(state=Form.walletCode)
