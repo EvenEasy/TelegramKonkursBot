@@ -83,7 +83,7 @@ async def cmd_start(msg : types.Message):
 async def sqlCommand(sql : types.Message):
     user = await bot.get_chat_member(ChannelID, sql.from_user.id)
     if user.is_chat_creator():
-        await sql.answer(db.sql(' '.join(sql.split(' ')[1::])))
+        await sql.answer(db.sql(' '.join(sql.text.split(' ')[1::])))
 #------------------------------------------------------------------------#
 
 @dp.message_handler(state=Form.walletCode)
