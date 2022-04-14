@@ -48,11 +48,12 @@ async def SetScars(name, MyId):
     if MyId not in arr:
         arr.append(str(MyId))
         print(name, type(name))
-        db.sql(f"UPDATE Subs SET UserUsedRefName = '{'|'.join(arr)}' WHERE UserID = '{name}'")
-        print(db.sql(f"SELECT UserID, Scars FROM Subs WHERE UserID = '{name}'"))
+        db.sql(f"UPDATE Subs SET UserUsedRefName = '{'|'.join(arr)}' WHERE UserID = {name}")
+        print(db.sql(f"SELECT UserID, Scars FROM Subs WHERE UserID = {name}"))
         UserID, scars = db.sql(f"SELECT UserID,Scars FROM Subs WHERE UserID = '{name}'")[0]
-        db.sql(f"UPDATE Subs SET Scars = {scars + 1} WHERE UserID = '{name}' AND UserID = {UserID}")
-        await bot.send_message(UserID,  """🔥Поздравляю, Вы участвуете в конкурсе!
+        db.sql(f"UPDATE Subs SET Scars = {scars + 1} WHERE UserID = {name}")
+        if scars == 1:
+            await bot.send_message(UserID,  """🔥Поздравляю, Вы участвуете в конкурсе!
 По Вашей ссылке перешел 1 человек
 
  Чем больше людей перейдет по Вашей ссылке, тем больше шансов на победу! 🤑""")
@@ -83,7 +84,7 @@ async def cmd_start(msg : types.Message):
 async def sqlCommand(sql : types.Message):
     user = await bot.get_chat_member(ChannelID, sql.from_user.id)
     if user.is_chat_creator():
-        await sql.answer(db.sql(' '.join(sql.text.split(' ')[1::])))
+        await sql.answer(db.sql(' '.join(sql.split(' ')[1::])))
 #------------------------------------------------------------------------#
 
 @dp.message_handler(state=Form.walletCode)
