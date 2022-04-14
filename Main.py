@@ -50,12 +50,10 @@ async def SetScars(name, MyId):
         scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0]
         db.sql(f"UPDATE Subs SET Scars = {scars + 1} WHERE UserID = {name}")
         if scars + 1 == 1:
-            print("message send")
             await bot.send_message(name,"""🔥Поздравляю, Вы участвуете в конкурсе!
 По Вашей ссылке перешел 1 человек
 
  Чем больше людей перейдет по Вашей ссылке, тем больше шансов на победу! 🤑""", reply_markup=Markups.MainBttnsPanel(False))
-            print("Message sended")
 #----------------------------------------------------------FUNCTION----------------------------------------------------------#
 
 @dp.message_handler(commands=['start'])
@@ -116,7 +114,7 @@ async def Functions(msg : types.Message):
         await Form.walletCode.set()
     elif msg.text == "Моя реферальная ссылка":
         refLink = f"https://t.me/{BotName}?start={msg.from_user.id}"
-        await msg.answer(f"Ваша [реферальная ссылка]({refLink})\n*для участия в конкурсе, пригласите минимум 1 человека", parse_mode="Markdown")
+        await msg.answer(f"Ваша реферальная ссылка :\n{refLink}\n*для участия в конкурсе, пригласите минимум 1 человека")
 #----------------------------------------------------------CALL-BACK-BTTN-CLICK----------------------------------------------------------#
 
 @dp.callback_query_handler(text=["CheckSub", "CheckMyScars", "ChangeWalletCode", "MyReffLink", "GoToMainMenu", "list"])
@@ -161,7 +159,7 @@ async def callback(call : types.CallbackQuery):
 
     elif call.data == "MyReffLink":
         refLink = f"https://t.me/{BotName}?start={call.from_user.id}"
-        await call.message.answer(f"Ваша [реферальная ссылка]({refLink})\n*для участия в конкурсе, пригласите минимум 1 человека", parse_mode="Markdown")
+        await call.message.answer(f"Ваша реферальная ссылка :\n{refLink}\n*для участия в конкурсе, пригласите минимум 1 человека")
     elif call.data == "list":
         with open("MembersList.txt", 'a', encoding='utf8') as file:
             file.truncate(0)
