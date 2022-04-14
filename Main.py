@@ -9,7 +9,8 @@ from BaseData import BaseData
 logging.basicConfig(level=logging.INFO)
 bot = Bot(config.TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
-ChannelID = "@testchnbot"
+ChannelID = "@Qredo_Russian"
+BotName = "Qredo_Russia_AirDrop_bot"
 
 db = BaseData("basedata.db")
 
@@ -32,7 +33,7 @@ async def CheckSubsMembers():
                         arr.remove(id)
                         db.sql(f"UPDATE Subs SET Scars = {scars - 1}, UserUsedRefName = '{'|'.join(arr)}' WHERE userID={i}")
                         user = await bot.get_chat_member(ChannelID, i)
-                        await bot.send_message(member.user.id, "Вы уже не участвуете в конкурсе, Вы покинули группу [Qredo Russian](https://t.me/Qredo_Russian)", reply_markup=Markups.Participal)
+                        await bot.send_message(member.user.id, "❌Вы уже не участвуете в конкурсе, Вы покинули группу [Qredo Russian](https://t.me/Qredo_Russian)", reply_markup=Markups.Participal, parse_mode="Markdown")
                         await bot.send_message(user.user.id, f"Участник {member.user.mention} покинул чат, у Вас минус 1 балл 😔")
 
 def InsertData(UserID, ID = ''):
@@ -64,7 +65,7 @@ async def cmd_start(msg : types.Message):
     NumInvited = 0
     if db.sql(f"SELECT UserName FROM Subs WHERE userID = {msg.from_user.id}") != []:
         NumInvited, balance = db.sql(f"SELECT Scars, Balance FROM Subs WHERE userID = {msg.from_user.id} LIMIT 1")[0]
-    personalLink = f"https://t.me/EvenEasyBot?start={msg.from_user.id}"
+    personalLink = f"https://t.me/{BotName}?start={msg.from_user.id}"
     
     try:
         userID = msg.text.split(' ')[1]
@@ -82,7 +83,7 @@ async def cmd_start(msg : types.Message):
 @dp.message_handler(state=Form.walletCode)
 async def WalletCode(msg : types.Message, state : FSMContext):
     await state.finish()
-    personalLink = f"https://t.me/EvenEasyBot?start={msg.from_user.id}"
+    personalLink = f"https://t.me/{BotName}?start={msg.from_user.id}"
     user = await bot.get_chat_member(ChannelID, msg.from_user.id)
     if msg.text == "Главное меню" or msg.text == '/start':
         balance = 0
@@ -105,10 +106,10 @@ async def Functions(msg : types.Message):
         Scars = 0 if db.sql(f"SELECT Scars FROM Subs WHERE UserID = {msg.from_user.id}") == [] else db.sql(f"SELECT Scars FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
         await msg.answer(f"Кол-во ваших баллов : {Scars}")
     elif msg.text == "Изменить Wallet code":
-        await msg.answer("Введите новий wallet code")
+        await msg.answer("Введите новий Wallet Code:")
         await Form.walletCode.set()
     elif msg.text == "Моя реферальная ссылка":
-        refLink = f"https://t.me/EvenEasyBot?start={msg.from_user.id}"
+        refLink = f"https://t.me/{BotName}?start={msg.from_user.id}"
         await msg.answer(f"Ваша [реферальная ссылка]({refLink})\n*для участия в конкурсе, пригласите минимум 1 человека", parse_mode="Markdown")
 #----------------------------------------------------------CALL-BACK-BTTN-CLICK----------------------------------------------------------#
 
@@ -130,7 +131,7 @@ async def callback(call : types.CallbackQuery):
                 await bot.send_photo(call.message.chat.id, open('photo.jpg', 'rb'), caption=db.ValidText, parse_mode="Markdown")
                 await Form.walletCode.set()
                 return
-            url = f"https://t.me/EvenEasyBot?start={user.user.id}"
+            url = f"https://t.me/{BotName}?start={user.user.id}"
             print(2)
             if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {user.user.id}")[0][0] == None:
                 db.sql(f"UPDATE Subs SET Scars = 0,Balance = 0, UserName = '{str(user.user.mention)}', WalletCode = '', UserUsedRefName = '' WHERE UserID = {call.from_user.id}")
@@ -149,11 +150,11 @@ async def callback(call : types.CallbackQuery):
         await call.message.answer(db.MainText.format(call.from_user.first_name), reply_markup=Markups.MainPanel(user.is_chat_creator(), Scars >= 1, user.is_chat_member), parse_mode="Markdown")
 
     elif call.data == "ChangeWalletCode":
-        await call.message.answer("Введите новий wallet code")
+        await call.message.answer("Введите новий Wallet Code:")
         await Form.walletCode.set()
 
     elif call.data == "MyReffLink":
-        refLink = f"https://t.me/EvenEasyBot?start={call.from_user.id}"
+        refLink = f"https://t.me/{BotName}?start={call.from_user.id}"
         await call.message.answer(f"Ваша реферальная ссылка :\n{refLink}\n*для участия в конкурсе, пригласите минимум 1 человека")
     elif call.data == "list":
         with open("MembersList.txt", 'a', encoding='utf8') as file:
