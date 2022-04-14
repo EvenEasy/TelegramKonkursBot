@@ -161,7 +161,7 @@ async def callback(call : types.CallbackQuery):
 
     elif call.data == "MyReffLink":
         refLink = f"https://t.me/{BotName}?start={call.from_user.id}"
-        await call.message.answer(f"Ваша реферальная ссылка :\n{refLink}\n*для участия в конкурсе, пригласите минимум 1 человека")
+        await call.message.answer(f"Ваша [реферальная ссылка]({refLink})\n*для участия в конкурсе, пригласите минимум 1 человека", parse_mode="Markdown")
     elif call.data == "list":
         with open("MembersList.txt", 'a', encoding='utf8') as file:
             file.truncate(0)
