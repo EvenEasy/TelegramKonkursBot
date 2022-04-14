@@ -47,11 +47,11 @@ async def SetScars(name, MyId):
     if MyId not in arr:
         arr.append(str(MyId))
         db.sql(f"UPDATE Subs SET UserUsedRefName = '{'|'.join(arr)}' WHERE UserID = {name}")
-        UserID, scars = db.sql(f"SELECT UserID,Scars FROM Subs WHERE UserID = {name}")[0]
+        scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0]
         db.sql(f"UPDATE Subs SET Scars = {scars + 1} WHERE UserID = {name}")
-        if scars == 1:
+        if scars + 1 == 1:
             print("message send")
-            await bot.send_message(UserID,  """🔥Поздравляю, Вы участвуете в конкурсе!
+            await bot.send_message(name,"""🔥Поздравляю, Вы участвуете в конкурсе!
 По Вашей ссылке перешел 1 человек
 
  Чем больше людей перейдет по Вашей ссылке, тем больше шансов на победу! 🤑""", reply_markup=Markups.MainBttnsPanel(False))
