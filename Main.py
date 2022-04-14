@@ -25,7 +25,6 @@ async def CheckSubsMembers():
             arr = []
         if arr != []:
             for id in arr:
-                print(i)
                 if id != ' ' and id != '':
                     member = await bot.get_chat_member(ChannelID, id)
                     if not member.is_chat_member():
@@ -47,16 +46,16 @@ async def SetScars(name, MyId):
         return 
     if MyId not in arr:
         arr.append(str(MyId))
-        print(name, type(name))
         db.sql(f"UPDATE Subs SET UserUsedRefName = '{'|'.join(arr)}' WHERE UserID = {name}")
-        print(db.sql(f"SELECT UserID, Scars FROM Subs WHERE UserID = {name}"))
         UserID, scars = db.sql(f"SELECT UserID,Scars FROM Subs WHERE UserID = {name}")[0]
         db.sql(f"UPDATE Subs SET Scars = {scars + 1} WHERE UserID = {name}")
         if scars == 1:
+            print("message send")
             await bot.send_message(UserID,  """🔥Поздравляю, Вы участвуете в конкурсе!
 По Вашей ссылке перешел 1 человек
 
- Чем больше людей перейдет по Вашей ссылке, тем больше шансов на победу! 🤑""")
+ Чем больше людей перейдет по Вашей ссылке, тем больше шансов на победу! 🤑""", reply_markup=Markups.MainBttnsPanel(False))
+            print("Message sended")
 #----------------------------------------------------------FUNCTION----------------------------------------------------------#
 
 @dp.message_handler(commands=['start'])
