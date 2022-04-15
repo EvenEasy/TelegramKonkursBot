@@ -21,55 +21,75 @@ async def CheckSubsMembers():
     for i, name in db.sql("SELECT UserId, UserName FROM Subs"):
         arr = db.sql(f"SELECT UserID FROM Subs WHERE UsedLinkID = '{i}'")
         for id in arr:
-            if id[0] != ' ' and id[0] != '':
-                member = await bot.get_chat_member(ChannelID, id[0])
-                if not member.is_chat_member():
-                    scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i}")[0][0]
-                    arr.remove(id[0])
-                    db.sql(f"UPDATE Subs SET Scars = {scars - 1} WHERE userID={i}")
-                    db.sql(f"UPDATE Subs SET UsedLinkID = '' WHERE UserID = {id[0]}")
-                    user = await bot.get_chat_member(ChannelID, i)
-                    await bot.send_message(member.user.id, "❌Вы уже не участвуете в конкурсе, Вы покинули группу [Qredo Russian](https://t.me/Qredo_Russian)", reply_markup=Markups.Participal, parse_mode="Markdown")
-                    await bot.send_message(user.user.id, f"Участник {member.user.mention} покинул чат, у Вас минус 1 балл 😔")
+            print(id[0])
+            member = await bot.get_chat_member(ChannelID, id[0])
+            scarsNow = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i}")[0][0]
+            scars = len(arr)
+            print(scars, scars)
+            print(id[0],"Is",member.is_chat_member())
+            print(scars > scarsNow)
+            if not member.is_chat_member():
+                db.sql(f"UPDATE Subs SET UsedLinkID = '', UserName = '' WHERE UserID = {id[0]}")
+                print("Is not member")
+                db.sql(f"UPDATE Subs SET Scars = {scars - 1} WHERE userID={i}")
+                print("Updated")
+                user = await bot.get_chat_member(ChannelID, i)
+                await bot.send_message(member.user.id, "❌Вы уже не участвуете в конкурсе, Вы покинули группу [Qredo Russian](https://t.me/Qredo_Russian)", reply_markup=Markups.Participal, parse_mode="Markdown")
+                await bot.send_message(user.user.id, f"Участник {member.user.mention} покинул чат, у Вас минус 1 балл 😔")
+                print("Sended message")
 
 def InsertData(UserID, ID = ''):
     if db.sql(f"SELECT UserID FROM Subs WHERE UserID = {UserID}") == []:
         db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
 
-async def SetScars(name, MyId):
+async def SetScars(name):
+    print("SET SCARS")
     if name == '':
         return
+    print("is not empty")
     arr = db.sql(f"SELECT UserID FROM Subs WHERE UsedLinkID = '{name}'")
     scars = len(arr)
+    print(scars)
     scarsold = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0]
+    print(scarsold)
     db.sql(f"UPDATE Subs SET Scars = {scars} WHERE UserID = {name}")
+    print("Updated")
     if scars == 1 and scarsold < 1:
         await bot.send_message(name,"""🔥Поздравляю, Вы участвуете в конкурсе!
 По Вашей ссылке перешел 1 человек
 
  Чем больше людей перейдет по Вашей ссылке, тем больше шансов на победу! 🤑""", reply_markup=Markups.MainBttnsPanel(False))
+        print("Message sended")
 #----------------------------------------------------------FUNCTION----------------------------------------------------------#
 
 @dp.message_handler(commands=['start'])
 async def cmd_start(msg : types.Message):
+    await CheckSubsMembers()
     member = await bot.get_chat_member(ChannelID, msg.from_user.id)
     balance = 0
     NumInvited = 0
     if db.sql(f"SELECT UserName FROM Subs WHERE userID = {msg.from_user.id}") != []:
         NumInvited, balance = db.sql(f"SELECT Scars, Balance FROM Subs WHERE userID = {msg.from_user.id} LIMIT 1")[0]
     personalLink = f"https://t.me/{BotName}?start={msg.from_user.id}"
-    
-    try:
-        userID = msg.text.split(' ')[1]
-        InsertData(msg.from_user.id,userID)
-    except IndexError:
-        InsertData(msg.from_user.id)
-    if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {msg.from_user.id}")[0][0] == None:
+    if db.sql(f"SELECT UserID FROM Subs WHERE UserID = {msg.from_user.id}") == []:
+        try:
+            userID = msg.text.split(' ')[1]
+            InsertData(msg.from_user.id,userID)
+        except IndexError:
+            InsertData(msg.from_user.id)
+    else:
+        try:
+            print("IS is BD")
+            userID = msg.text.split(' ')[1]
+            db.sql(f"UPDATE Subs SET UsedLinkID = '{userID}' WHERE UserID = {msg.from_user.id}")
+            print("LINK IS SETED")
+        except IndexError:
+            print("ENDEX ERROR")
+    if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {msg.from_user.id}")[0][0] == None or db.sql(f"SELECT UserName FROM Subs WHERE UserID = {msg.from_user.id}")[0][0] == '':
         await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.Participal, parse_mode="Markdown")
     else:
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE userID={msg.from_user.id}")[0][0] if db.sql(f"SELECT Scars FROM Subs WHERE userID={msg.from_user.id}")[0][0] != None else 0
-        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(member.is_chat_creator(), Scars >= 1, member.is_chat_member), parse_mode="Markdown")
-    await CheckSubsMembers()
+        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(member.is_chat_creator(), Scars >= 1, member.is_chat_member()), parse_mode="Markdown")
 
 @dp.message_handler(commands=['sql'])
 async def sqlCommand(sql : types.Message):
@@ -89,10 +109,11 @@ async def WalletCode(msg : types.Message, state : FSMContext):
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
         if db.sql(f"SELECT UserName FROM Subs WHERE userID = {msg.from_user.id}")[0][0] != None:
             NumInvited, balance = db.sql(f"SELECT Scars, Balance FROM Subs WHERE userID = {msg.from_user.id} LIMIT 1")[0]
-        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(False, Scars >= 1, user.is_chat_member))
+        await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.MainPanel(False, Scars >= 1, user.is_chat_member()))
         return
     db.sql(f"UPDATE Subs SET WalletCode = '{msg.text}' WHERE UserID = {msg.from_user.id}")
-    LinkID = db.sql(f"SELECT UsedLinkID FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
+    LinkID = '' if db.sql(f"SELECT UsedLinkID FROM Subs WHERE UserID = {msg.from_user.id}") == [] else db.sql(f"SELECT UsedLinkID FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
+    print(LinkID, "Send to SET SCARS")
     await SetScars(LinkID)
     await msg.answer(db.Form3Text, reply_markup=Markups.MainPanel(user.is_chat_creator()), parse_mode="Markdown")
 
@@ -112,6 +133,7 @@ async def Functions(msg : types.Message):
 
 @dp.callback_query_handler(text=["CheckSub", "CheckMyScars", "ChangeWalletCode", "MyReffLink", "GoToMainMenu", "list"])
 async def callback(call : types.CallbackQuery):
+    await CheckSubsMembers()
     try:
         await call.answer()
     except:
@@ -165,7 +187,6 @@ async def callback(call : types.CallbackQuery):
     else:
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {call.from_user.id}")[0][0]
         await call.message.answer(f"Кол-во ваших баллов : {Scars}")
-    await CheckSubsMembers()
 
 #---------------------------------RUN-THE-BOT-------------------------------------#
 
