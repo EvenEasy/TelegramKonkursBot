@@ -50,7 +50,7 @@ async def SetScars(name):
     arr = db.sql(f"SELECT UserID FROM Subs WHERE UsedLinkID = '{name}'")
     scars = len(arr)
     print(scars)
-    scarsold = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0]
+    scarsold = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0] if db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0] != None else 0
     print(scarsold)
     db.sql(f"UPDATE Subs SET Scars = {scars} WHERE UserID = {name}")
     print("Updated")
@@ -86,6 +86,7 @@ async def cmd_start(msg : types.Message):
         except IndexError:
             print("ENDEX ERROR")
     if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {msg.from_user.id}")[0][0] == None or db.sql(f"SELECT UserName FROM Subs WHERE UserID = {msg.from_user.id}")[0][0] == '':
+        db.sql(f"UPDATE Subs SET UserName = '{str(msg.from_user.mention)}' WHERE UserID = {msg.from_user.id}")
         await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.Participal, parse_mode="Markdown")
     else:
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE userID={msg.from_user.id}")[0][0] if db.sql(f"SELECT Scars FROM Subs WHERE userID={msg.from_user.id}")[0][0] != None else 0
@@ -133,7 +134,6 @@ async def Functions(msg : types.Message):
 
 @dp.callback_query_handler(text=["CheckSub", "CheckMyScars", "ChangeWalletCode", "MyReffLink", "GoToMainMenu", "list"])
 async def callback(call : types.CallbackQuery):
-    await CheckSubsMembers()
     try:
         await call.answer()
     except:
