@@ -59,9 +59,9 @@ def InsertData(UserID, ID = ''):
     if db.sql(f"SELECT UserID FROM Subs WHERE UserID = {UserID}") == []:
         db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
 
-async def SetScars(name):
+async def SetScars(name, myID):
     print("SET SCARS")
-    if name == '':
+    if name == '' or myID == name:
         return
     print("is not empty")
     arr = db.sql(f"SELECT UserID FROM Subs WHERE UsedLinkID = '{name}'")
@@ -135,7 +135,7 @@ async def WalletCode(msg : types.Message, state : FSMContext):
     db.sql(f"UPDATE Subs SET WalletCode = '{msg.text}' WHERE UserID = {msg.from_user.id}")
     LinkID = '' if db.sql(f"SELECT UsedLinkID FROM Subs WHERE UserID = {msg.from_user.id}") == [] else db.sql(f"SELECT UsedLinkID FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
     print(LinkID, "Send to SET SCARS")
-    await SetScars(LinkID)
+    await SetScars(LinkID, msg.from_user.id)
     await msg.answer(db.Form3Text, reply_markup=Markups.MainPanel(user.is_chat_creator()), parse_mode="Markdown")
 
 @dp.message_handler()
