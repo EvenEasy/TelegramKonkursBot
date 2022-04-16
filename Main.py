@@ -18,8 +18,17 @@ class Form(StatesGroup):
     walletCode = State()
 
 async def CheckSubsMembers():
+    print("CHECK MEMBERS")
     for i, name in db.sql("SELECT UserId, UserName FROM Subs"):
+        print("USER", i)
+        linkID = db.sql(f"SELECT UsedLinkID FROM Subs WHERE UserID = {i}")[0][0]
+        print(linkID)
+        member1 = await bot.get_chat_member(ChannelID, i)
+        if not member1.is_chat_member() and linkID == '':
+            await bot.send_message(member1.user.id, "❌Вы уже не участвуете в конкурсе, Вы покинули группу [Qredo Russian](https://t.me/Qredo_Russian)", reply_markup=Markups.Participal, parse_mode="Markdown")
+            return
         arr = db.sql(f"SELECT UserID FROM Subs WHERE UsedLinkID = '{i}'")
+        print("USED LINK")
         for id in arr:
             print(id[0])
             member = await bot.get_chat_member(ChannelID, id[0])
