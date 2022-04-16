@@ -37,7 +37,10 @@ async def CheckSubsMembers():
         for id in arr:
             print(id[0])
             member = await bot.get_chat_member(ChannelID, id[0])
-            scarsNow = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i}")[0][0]
+            try:
+                scarsNow = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i}")[0][0]
+            except:
+                scarsNow = 0
             scars = len(arr)
             print(scars, scars)
             print(id[0],"Is",member.is_chat_member())
@@ -64,7 +67,10 @@ async def SetScars(name):
     arr = db.sql(f"SELECT UserID FROM Subs WHERE UsedLinkID = '{name}'")
     scars = len(arr)
     print(scars)
-    scarsold = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0] if db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0] != None else 0
+    try:
+        scarsold = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0] if db.sql(f"SELECT Scars FROM Subs WHERE UserID = {name}")[0][0] != None else 0
+    except:
+        scarsold = 0
     print(scarsold)
     db.sql(f"UPDATE Subs SET Scars = {scars} WHERE UserID = {name}")
     print("Updated")
