@@ -38,7 +38,7 @@ async def CheckSubsMembers():
             print(id[0])
             member = await bot.get_chat_member(ChannelID, id[0])
             try:
-                scarsNow = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i}")[0][0]
+                scarsNow = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i}")[0][0] if db.sql(f"SELECT Scars FROM Subs WHERE UserID = {i}")[0][0] != None else 0
             except:
                 scarsNow = 0
             scars = len(arr)
