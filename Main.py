@@ -22,9 +22,14 @@ async def CheckSubsMembers():
     for i, name in db.sql("SELECT UserId, UserName FROM Subs"):
         print("USER", i)
         linkID = db.sql(f"SELECT UsedLinkID FROM Subs WHERE UserID = {i}")[0][0]
+        try:
+            userName = '' if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {i}")[0][0] == '' else db.sql(f"SELECT UserName FROM Subs WHERE UserID = {i}")[0][0]
+        except:
+            userName = ''
         print(linkID)
         member1 = await bot.get_chat_member(ChannelID, i)
-        if not member1.is_chat_member() and linkID == '':
+        if not member1.is_chat_member() and linkID == '' and userName != '':
+            db.sql(f"UPDATE Subs SET UserName = '' WHERE UserID = {i}")
             await bot.send_message(member1.user.id, "❌Вы уже не участвуете в конкурсе, Вы покинули группу [Qredo Russian](https://t.me/Qredo_Russian)", reply_markup=Markups.Participal, parse_mode="Markdown")
             return
         arr = db.sql(f"SELECT UserID FROM Subs WHERE UsedLinkID = '{i}'")
