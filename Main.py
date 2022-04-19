@@ -57,8 +57,9 @@ async def CheckSubsMembers():
 
 def InsertData(UserID, ID = ''):
     if db.sql(f"SELECT UserID FROM Subs WHERE UserID = {UserID}") == []:
-        if int(UserID) == int(ID):
-            db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'')")
+        if ID != '':
+            if int(UserID) == int(ID):
+                db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
         else:
             db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
 
