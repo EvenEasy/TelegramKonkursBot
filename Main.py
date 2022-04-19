@@ -99,7 +99,7 @@ async def cmd_start(msg : types.Message):
             InsertData(msg.from_user.id)
     else:
         try:
-            print("IS is BD")
+            print("IS in BD")
             userID = msg.text.split(' ')[1]
             db.sql(f"UPDATE Subs SET UsedLinkID = '{userID}' WHERE UserID = {msg.from_user.id}")
             print("LINK IS SETED")
@@ -124,9 +124,10 @@ async def WalletCode(msg : types.Message, state : FSMContext):
     await state.finish()
     personalLink = f"https://t.me/{BotName}?start={msg.from_user.id}"
     user = await bot.get_chat_member(ChannelID, msg.from_user.id)
-    if msg.text == "Главное меню" or msg.text == '/start':
+    if msg.text == "Главное меню" or '/start' in msg.text:
         balance = 0
         NumInvited = 0
+        print("NOT WRITED : ", msg.text)
         Scars = db.sql(f"SELECT Scars FROM Subs WHERE UserID = {msg.from_user.id}")[0][0]
         if db.sql(f"SELECT UserName FROM Subs WHERE userID = {msg.from_user.id}")[0][0] != None:
             NumInvited, balance = db.sql(f"SELECT Scars, Balance FROM Subs WHERE userID = {msg.from_user.id} LIMIT 1")[0]
@@ -164,13 +165,11 @@ async def callback(call : types.CallbackQuery):
             await call.message.answer("❌ Вы не Подписаны.")
             return
         try:
-            print(1)
             if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {user.user.id}")[0][0] != None:
                 await bot.send_photo(call.message.chat.id, open('photo.jpg', 'rb'), caption=db.ValidText, parse_mode="Markdown")
                 await Form.walletCode.set()
                 return
             url = f"https://t.me/{BotName}?start={user.user.id}"
-            print(2)
             if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {user.user.id}")[0][0] == None:
                 db.sql(f"UPDATE Subs SET Scars = 0,Balance = 0, UserName = '{str(user.user.mention)}', WalletCode = '' WHERE UserID = {call.from_user.id}")
 
@@ -198,7 +197,8 @@ async def callback(call : types.CallbackQuery):
         with open("MembersList.txt", 'a', encoding='utf8') as file:
             file.truncate(0)
             for name, WalletCode, Scars in db.sql("SELECT UserName, WalletCode, Scars FROM Subs ORDER BY Scars DESC"):
-                file.write(f"[ {name} ] , {WalletCode} - {Scars}\n")
+                if name != Scars != None:
+                    file.write(f"[ {name} ] , {WalletCode} - {Scars}\n")
         with open(file.name, 'rb') as f:
             try:
                 await bot.send_document(call.from_user.id, f)
