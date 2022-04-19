@@ -170,8 +170,7 @@ async def callback(call : types.CallbackQuery):
             return
         try:
             if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {user.user.id}")[0][0] != None:
-                await bot.send_photo(call.message.chat.id, open('photo.jpg', 'rb'), caption=db.ValidText, parse_mode="Markdown")
-                await Form.walletCode.set()
+                await call.message.answer(db.Form3Text, reply_markup=Markups.MainPanel(user.is_chat_creator()), parse_mode="Markdown")
                 return
             url = f"https://t.me/{BotName}?start={user.user.id}"
             if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {user.user.id}")[0][0] == None:
