@@ -57,9 +57,8 @@ async def CheckSubsMembers():
 
 def InsertData(UserID, ID = ''):
     if db.sql(f"SELECT UserID FROM Subs WHERE UserID = {UserID}") == []:
-        if ID != '':
-            if int(UserID) == int(ID):
-                db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
+        if str(UserID) == ID:
+            db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'')")
         else:
             db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
 
@@ -105,10 +104,10 @@ async def cmd_start(msg : types.Message):
         try:
             print("IS in BD")
             userID = msg.text.split(' ')[1]
-            db.sql(f"UPDATE Subs SET UsedLinkID = '{userID}' WHERE UserID = {msg.from_user.id}")
-            print("LINK IS SETED")
+            if userID != str(msg.from_user.id):
+                db.sql(f"UPDATE Subs SET UsedLinkID = '{userID}' WHERE UserID = {msg.from_user.id}")
         except IndexError:
-            print("ENDEX ERROR")
+            pass
     if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {msg.from_user.id}")[0][0] == None or db.sql(f"SELECT UserName FROM Subs WHERE UserID = {msg.from_user.id}")[0][0] == '':
         db.sql(f"UPDATE Subs SET UserName = '{str(msg.from_user.mention)}' WHERE UserID = {msg.from_user.id}")
         await msg.answer(db.MainText.format(msg.from_user.first_name, balance, NumInvited, personalLink), reply_markup=Markups.Participal, parse_mode="Markdown")
@@ -169,10 +168,9 @@ async def callback(call : types.CallbackQuery):
             await call.message.answer("❌ Вы не Подписаны.")
             return
         try:
-            if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {user.user.id}")[0][0] != None:
+            if db.sql(f"SELECT WalletCode FROM Subs WHERE UserID = {user.user.id}")[0][0] != None or db.sql(f"SELECT WalletCode FROM Subs WHERE UserID = {user.user.id}")[0][0] == '':
                 await call.message.answer(db.Form3Text, reply_markup=Markups.MainPanel(user.is_chat_creator()), parse_mode="Markdown")
                 return
-            url = f"https://t.me/{BotName}?start={user.user.id}"
             if db.sql(f"SELECT UserName FROM Subs WHERE UserID = {user.user.id}")[0][0] == None:
                 db.sql(f"UPDATE Subs SET Scars = 0,Balance = 0, UserName = '{str(user.user.mention)}', WalletCode = '' WHERE UserID = {call.from_user.id}")
 
