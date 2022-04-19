@@ -57,7 +57,10 @@ async def CheckSubsMembers():
 
 def InsertData(UserID, ID = ''):
     if db.sql(f"SELECT UserID FROM Subs WHERE UserID = {UserID}") == []:
-        db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
+        if int(UserID) == int(ID):
+            db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'')")
+        else:
+            db.sql(f"INSERT INTO Subs(UserID, UsedLinkID) VALUES ({UserID},'{ID}')")
 
 async def SetScars(name, myID):
     print("SET SCARS")
@@ -197,7 +200,7 @@ async def callback(call : types.CallbackQuery):
         with open("MembersList.txt", 'a', encoding='utf8') as file:
             file.truncate(0)
             for name, WalletCode, Scars in db.sql("SELECT UserName, WalletCode, Scars FROM Subs ORDER BY Scars DESC"):
-                if name != Scars != None:
+                if Scars != None:
                     file.write(f"[ {name} ] , {WalletCode} - {Scars}\n")
         with open(file.name, 'rb') as f:
             try:
